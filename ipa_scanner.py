@@ -33,24 +33,35 @@ from html import escape
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
 SENSITIVE_PATTERNS = {
+    # Google and Firebase
     "Google API Key": r"AIza[0-9A-Za-z\-_]{35}",
     "Firebase Key": r"AAAA[A-Za-z0-9_-]{7}:[A-Za-z0-9_-]{140}",
+
+    # AWS
     "AWS Access Key ID": r"AKIA[0-9A-Z]{16}",
     "AWS Secret Access Key": r"(?i)aws(?:.{0,20})?(?:secret|private)?(?:.{0,20})?['\"][^\s'\"]{40,}['\"]",
+
+    # Stripe
     "Stripe Live Secret Key": r"sk_live_[0-9a-zA-Z\/]{24,}",
     "Stripe Test Secret Key": r"sk_test_[0-9a-zA-Z\/]{24,}",
     "Stripe Publishable Key": r"pk_(?:test|live)_[0-9a-zA-Z\/]{24,}",
     "Stripe Webhook Secret": r"whsec_[0-9a-zA-Z]{32,}",
+
+    # PayPal
     "PayPal Client ID": r"A[a-zA-Z0-9]{79,}",
     "PayPal Secret": r"(?i)(?:paypal.*secret)[\s:=\"']+[^\x00-\x1F\x7F<>]{32,}",
     "PayPal Access Token": r"access_token\\$production\\$[a-zA-Z0-9\-_]{100,}",
     "PayPal Email": r"[a-zA-Z0-9_.+-]+@paypal\\.com",
     "PayPal Webhook URL": r"https:\/\/api\\.paypal\\.com\/v1\/notifications\/webhooks",
     "PayPal Sandbox Credentials": r"(?:sandbox|test)\.paypal\.com",
+
+    # Generic/API Keys
     "Generic API Key": r"(?i)(?:api|apikey|secret|token)[\s:=\"']{1,3}[^\s\"'<>]{16,}",
     "Private Key": r"-----BEGIN (?:RSA|DSA|EC|PGP|PRIVATE) KEY-----",
     "JWT": r"eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]*",
     "Slack Token": r"xox[baprs]-[0-9a-zA-Z]{10,48}",
+
+    # Common hardcoded username/password
     "Username": r"(?i)(username|user|uname)[\s:=\"']+[a-zA-Z0-9._-]{3,}[^\n]*",
     "Password": r"(?i)(password|passwd|pwd)[\s:=\"']+[a-zA-Z0-9!@#$%^&*()_+=\-]{4,}[^\n]*",
 }
@@ -66,6 +77,12 @@ PERMISSION_KEYWORDS = [
     "NSCameraUsageDescription", "NSLocationWhenInUseUsageDescription",
     "NSLocationAlwaysUsageDescription", "NSMicrophoneUsageDescription",
     "NSPhotoLibraryUsageDescription", "NSBluetoothAlwaysUsageDescription"
+]
+
+PERMISSION_CODE_INDICATORS = [
+    "requestWhenInUseAuthorization", "requestAlwaysAuthorization",
+    "AVCaptureDevice", "CLLocationManager", "PHPhotoLibrary",
+    "BluetoothManager", "MicrophonePermission"
 ]
 
 OBFUSCATION_HINTS = ['obfuscator', 'proguard', 'r8', 'minifyenabled']
@@ -154,9 +171,10 @@ def scan_directory(directory):
                 try:
                     with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
                         content = f.read()
-                        if file == "Info.plist":
-                            perms = parse_info_plist(full_path)
-                            permissions.update(perms.keys())
+                        for keyword in PERMISSION_KEYWORDS:
+                            if file == "Info.plist":
+                                perms = parse_info_plist(full_path)
+                                permissions.add(keyword)
                         for obf in OBFUSCATION_HINTS:
                             if obf.lower() in content.lower():
                                 obfuscation_signals.add(obf)
