@@ -1,119 +1,74 @@
-Here’s a **GitHub-friendly README** you can copy-paste directly into your repo for the **IPA Scanner Optimized** tool:
+# 🔐 IPA Secret Scanner
 
----
-
-# 📱 IPA Scanner Optimized
-
-A powerful CLI tool for scanning **IPA files** or **extracted directories** for sensitive data, secrets, hardcoded credentials, permissions, and signs of obfuscation. It generates a structured and dark-themed **HTML report** for easy analysis.
-
----
+A Python tool to scan extracted iOS IPA packages (or directories) for secrets such as API keys, access tokens, credentials, and more. It generates a categorized, collapsible, dark-themed HTML report for easier analysis and sharing.
 
 ## 🚀 Features
 
-* 🔍 Scans IPA files or folders for:
+- 🔍 Detects common secrets using regex (API keys, tokens, JWT, AWS keys, Stripe keys, etc.)
+- 🧠 Decodes and filters Base64-encoded values
+- 🧾 Extracts and scans human-readable strings from binary files
+- ⚠️ Flags sensitive file extensions like `.pem`, `.key`, `.crt`
+- 🔐 Highlights code obfuscation hints (Proguard, R8)
+- 📁 Supports `.ipa` file extraction and direct folder scanning
+- 📄 Generates clean, styled, mobile-friendly HTML reports
+- 🧪 Skips known non-sensitive files (e.g., images, fonts, CSS)
 
-  * API keys, secrets, tokens, credentials
-  * Base64-encoded secrets (text files only)
-  * Sensitive files like `.pem`, `.key`, `.crt`
-  * iOS permission usage (`Info.plist`, code indicators)
-  * Signs of code obfuscation (e.g., ProGuard, R8)
-  * Strings from **extensionless binary files** (IPA-specific)
-* 🗂 Excludes irrelevant files (`.png`, `.jpg`, `.css`, etc.)
-* 📄 Outputs a **collapsible dark-themed HTML report**
-* ✅ Fully CLI-based, fast and easy to integrate into workflows
+## 📂 Input Options
 
----
+You can either:
+- Pass an `.ipa` file with `--ipa`
+- Scan a pre-extracted directory with `--dir`
 
-## 📂 Files Scanned
-
-* `.m`, `.swift`, `.plist`, `.json`, `.xml`, and similar text-based files
-* Binary files with **no extension** (scanned using `strings`-like extraction)
-* Skips CSS/images/media files to reduce noise
-
----
-
-## 📦 Installation
-
-No installation needed. Just clone and run with Python 3:
+## 🖥️ Usage
 
 ```bash
-git clone https://github.com/shyam-chauhan/ipa_sec_scanner
-cd ipa_sec_scanner
-pip install -r requirements.txt
-```
+# From an IPA file:
+python ipa_scanner.py --ipa MyApp.ipa
 
----
+# From an already extracted directory:
+python ipa_scanner.py --dir ./MyAppPayload
 
-## 🧑‍💻 Usage
+# Output report (default is `scan_report.html`)
+python ipa_scanner.py --ipa MyApp.ipa --output my_report.html
+````
 
-### 1. Scan an IPA file:
+## 📊 Output
+
+* An HTML report named `scan_report.html` (or custom file)
+* Shows secrets grouped by type and file
+* Highlights:
+
+  * Sensitive Base64 values (decoded)
+  * Obfuscation hints
+  * Binary file secrets (in a special section)
+  * Sensitive file extensions found
+
+## ⚠️ Known Limitations
+
+* ❌ No recursive Base64 decoding
+* 🔍 No advanced false positive filtering
+* 🐢 Scans large IPAs/directories slowly (no threading)
+* 📄 Report only in HTML (no CSV/PDF/JSON export)
+* 🧠 Obfuscation detection is basic (keyword match)
+* 🧪 No CI/CD integration (yet)
+
+## 📦 Requirements
+
+* Python 3.6+
+* `tqdm`
+
+Install via:
 
 ```bash
-python ipa_scanner.py --ipa /path/to/app.ipa
+pip install tqdm
 ```
 
-### 2. Scan an extracted directory:
+## 📜 License
 
-```bash
-python ipa_scanner.py --dir /path/to/extracted_folder
-```
-
-### 3. Custom HTML output file:
-
-```bash
-python ipa_scanner.py --ipa app.ipa --output results.html
-```
-
-The tool will unzip the IPA (if applicable), scan files, and generate a clean and readable HTML report like:
-
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
 ---
 
-## 📌 Report Highlights
-
-* **Permissions used**
-* **Sensitive data categories** like API keys, secrets, credentials
-* **Base64 strings** with decoded values
-* **Sensitive file detection**
-* **Obfuscation detection**
-
----
-
-## 🔐 Patterns Detected
-
-Some examples include:
-
-* 🔑 Google/Firebase API Keys
-* 🛡️ AWS Keys
-* 💳 Stripe Secrets
-* 💰 PayPal Credentials
-* 🔐 JWTs, private keys, Slack tokens
-* 👤 Hardcoded usernames & passwords
-* 🧬 Base64-encoded secrets
-
----
-
-## 🛠 Developer Notes
-
-* Written in pure Python 3
-* Uses `tqdm` for progress display
-* Uses `plistlib` for Info.plist parsing
-* No external binary dependencies (like `strings`) required
-
----
-
-
----
-
-## 🙌 Contributing
-
-Pull requests, suggestions, and bug reports are welcome! Open an issue or fork and improve.
-
----
-
-## 👤 Author
-
-Developed by [Shyam Chauhan](https://github.com/shyam-chauhan)
-
----
+**Author**: Shyam Chauhan
+**Disclaimer**: Use only for ethical and authorized security assessments.
 
