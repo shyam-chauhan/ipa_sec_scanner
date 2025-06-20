@@ -37,8 +37,8 @@ A powerful CLI tool for scanning **IPA files** or **extracted directories** for 
 No installation needed. Just clone and run with Python 3:
 
 ```bash
-git clone https://github.com/shyam-chauhan/mob_scanner
-cd mob_scanner
+git clone https://github.com/shyam-chauhan/ipa_sec_scanner
+cd ipa_sec_scanner
 pip install -r requirements.txt
 ```
 
