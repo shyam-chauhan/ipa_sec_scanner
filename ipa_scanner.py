@@ -5,29 +5,10 @@ IPA Secret Scanner
 This script scans an extracted iOS IPA (or a directory) for sensitive data such as API keys, secrets, credentials,
 and embedded tokens in both text and binary files. It also generates an HTML report of the findings.
 
-Current Features:
------------------
-1. Detects sensitive keys/tokens using regular expressions (e.g., Google API Key, AWS Secrets, JWT, etc.).
-2. Supports Base64-encoded value detection and decoding (with filtering to avoid UI/CSS false positives).
-3. Extracts and scans strings from binary files (non-text) and classifies them separately.
-4. Highlights obfuscation hints (e.g., proguard, r8) found in code.
-5. Skips scanning for known non-sensitive files (e.g., images, fonts, CSS).
-6. Flags sensitive file extensions such as `.pem`, `.key`, `.crt`.
-7. Generates a styled, mobile-friendly HTML report with collapsible sections and categorized data.
-8. Supports both IPA extraction and direct directory scanning via command-line arguments.
-
-Known Drawbacks:
-----------------
-- No recursive Base64 decoding (only single-pass decoding).
-- No false-positive filtering beyond simple keyword heuristics.
-- Scans can be slow for large IPA files or directories (no parallelism).
-- Doesn't currently support JSON, CSV, or PDF export formats.
-- File size is not limited — may load and scan very large files into memory.
-- Obfuscation detection is basic (keyword match only).
-- No real-time or CI/CD integration without scripting.
-
+Fixes:
+------
+- Correctly extracts actual values from regex patterns with multiple capture groups (e.g., password, username).
 """
-
 
 import os
 import re
@@ -43,7 +24,6 @@ from html import escape
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 
 # === SENSITIVE PATTERNS ===
-# Regexes to identify secrets and tokens
 SENSITIVE_PATTERNS = {
     "Google API Key": r"AIza[0-9A-Za-z\-_]{35}",
     "Firebase Key": r"AAAA[A-Za-z0-9_-]{7}:[A-Za-z0-9_-]{140}",
@@ -59,24 +39,23 @@ SENSITIVE_PATTERNS = {
     "PayPal Email": r"[a-zA-Z0-9_.+-]+@paypal\\.com",
     "PayPal Webhook URL": r"https:\/\/api\\.paypal\\.com\/v1\/notifications\/webhooks",
     "PayPal Sandbox Credentials": r"(?:sandbox|test)\.paypal\.com",
-    "Generic API Key": r"(?i)(?:api|apikey|secret|token)[\s:=\"']{1,3}[^\s\"'<>]{16,}",
+    "Generic API Key": r"(?i)(?:api|apikey|secret|token)[\s:=\"']{1,3}([^\s\"'<>]{16,})",
     "Private Key": r"-----BEGIN (?:RSA|DSA|EC|PGP|PRIVATE) KEY-----",
     "JWT": r"eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]*",
     "Slack Token": r"xox[baprs]-[0-9a-zA-Z]{10,48}",
-    "Username": r"(?i)(username|user|uname)[\s:=\"']+[a-zA-Z0-9._-]{3,}[^\n]*",
-    "Password": r"(?i)(password|passwd|pwd)[\s:=\"']+[a-zA-Z0-9!@#$%^&*()_+=\-]{4,}[^\n]*",
+    "Username": r"(?i)(?:username|user|uname)[\s:=\"']+([a-zA-Z0-9._-]{3,})",
+    "Password": r"(?i)(?:password|passwd|pwd)[\s:=\"']+([a-zA-Z0-9!@#$%^&*()_+=\-]{4,})",
 }
 COMPILED_PATTERNS = {k: re.compile(v) for k, v in SENSITIVE_PATTERNS.items()}
 BASE64_REGEX = re.compile(r"\b[A-Za-z0-9+/]{20,}={0,2}\b")
 
-# Exclude fonts/images/etc. from scanning
+# Exclusions
 EXCLUDED_EXTENSIONS = ['.css', '.scss', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.woff', '.woff2', '.ttf', '.otf', '.eot']
 SENSITIVE_FILE_EXTENSIONS = ['.pem', '.key', '.crt', '.cer', '.pfx']
 COMMON_DEV_KEYWORDS = ['font-size', 'margin', 'padding', 'display', 'position']
 OBFUSCATION_HINTS = ['obfuscator', 'proguard', 'r8', 'minifyenabled']
 
 def is_text_file(path):
-    """Heuristically check if file is plain text."""
     try:
         with open(path, 'rb') as f:
             chunk = f.read(1024)
@@ -109,12 +88,12 @@ def extract_strings_from_binary(file_path, min_length=4):
         return ""
 
 def scan_content(content, decode_base64=True):
-    """Scan text content for sensitive data and Base64."""
+    """Scan content for secrets and base64 values."""
     sensitive, base64s = [], []
     for label, pattern in COMPILED_PATTERNS.items():
         for match in pattern.findall(content):
             if isinstance(match, tuple):
-                match = next((m for m in match if m), '')
+                match = match[-1]  # FIX: extract last (actual value) from capture groups
             if not looks_like_dev_code(match):
                 sensitive.append((label, match.strip()))
     if decode_base64:
@@ -141,7 +120,7 @@ def scan_directory(directory):
                         for obf in OBFUSCATION_HINTS:
                             if obf.lower() in content.lower():
                                 obfuscated.add(obf)
-                        s, b = scan_content(content, decode_base64=True)
+                        s, b = scan_content(content)
                         if s or b:
                             findings.append((full_path, s, b, False))
                 else:
@@ -155,7 +134,6 @@ def scan_directory(directory):
 
             except Exception as e:
                 logging.warning(f"Error processing {full_path}: {e}")
-
     return findings, sensitive_files, bool(obfuscated)
 
 def categorize(findings):
@@ -226,15 +204,14 @@ code{word-wrap:break-word;color:#81d4fa}
         f.write('\n'.join(html))
 
 def unzip_ipa(ipa_path, extract_dir):
-    """Extract .ipa file (ZIP format) to a directory."""
     with zipfile.ZipFile(ipa_path, 'r') as zip_ref:
         zip_ref.extractall(extract_dir)
 
 def main():
     parser = argparse.ArgumentParser(description="IPA/Directory Secret Scanner")
-    parser.add_argument("--ipa", help="Path to IPA")
+    parser.add_argument("--ipa", help="Path to IPA file")
     parser.add_argument("--dir", help="Path to extracted directory")
-    parser.add_argument("--output", default="scan_report.html", help="Output HTML")
+    parser.add_argument("--output", default="scan_report.html", help="Output HTML report path")
     args = parser.parse_args()
 
     if not args.ipa and not args.dir:
@@ -254,7 +231,7 @@ def main():
     logging.info("Scanning...")
     findings, sensitive_files, obfuscated = scan_directory(target)
     generate_html_report(findings, args.output, sensitive_files, obfuscated, target)
-    logging.info(f"Scan complete! Report saved: {args.output}")
+    logging.info(f"Scan complete! Report saved to: {args.output}")
 
 if __name__ == '__main__':
     main()
