@@ -38,7 +38,6 @@ SENSITIVE_PATTERNS = {
     "PayPal Access Token": r"access_token\\$production\\$[a-zA-Z0-9\-_]{100,}",
     "Generic API Key": r"(?i)(?:api|apikey|secret|token)[\s:=\"']{1,3}([^\s\"'<>]{16,})",
     "Private Key": r"-----BEGIN (?:RSA|DSA|EC|PGP|PRIVATE) KEY-----",
-    "JWT": r"eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]*",
     "Slack Token": r"xox[baprs]-[0-9a-zA-Z]{10,48}",
     # "Username": r"(?i)(?:username|user|uname)[\s:=\"']+([a-zA-Z0-9._-]{3,})",
     "Password": r"(?i)(?:password|passwd|pwd)[\s:=\"']+([a-zA-Z0-9!@#$%^&*()_+=\-]{4,})",
