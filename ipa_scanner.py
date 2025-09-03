@@ -34,17 +34,13 @@ SENSITIVE_PATTERNS = {
     "Stripe Publishable Key": r"pk_(?:test|live)_[0-9a-zA-Z\/]{24,}",
     "OpenAI Key": r"sk-[0-9a-zA-Z]{48}",
     "Stripe Webhook Secret": r"whsec_[0-9a-zA-Z]{32,}",
-    "PayPal Client ID": r"A[a-zA-Z0-9]{79,}",
     "PayPal Secret": r"(?i)(?:paypal.*secret)[\s:=\"']+[^\x00-\x1F\x7F<>]{32,}",
     "PayPal Access Token": r"access_token\\$production\\$[a-zA-Z0-9\-_]{100,}",
-    "PayPal Email": r"[a-zA-Z0-9_.+-]+@paypal\\.com",
-    "PayPal Webhook URL": r"https:\/\/api\\.paypal\\.com\/v1\/notifications\/webhooks",
-    "PayPal Sandbox Credentials": r"(?:sandbox|test)\.paypal\.com",
     "Generic API Key": r"(?i)(?:api|apikey|secret|token)[\s:=\"']{1,3}([^\s\"'<>]{16,})",
     "Private Key": r"-----BEGIN (?:RSA|DSA|EC|PGP|PRIVATE) KEY-----",
     "JWT": r"eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]*",
     "Slack Token": r"xox[baprs]-[0-9a-zA-Z]{10,48}",
-    "Username": r"(?i)(?:username|user|uname)[\s:=\"']+([a-zA-Z0-9._-]{3,})",
+    # "Username": r"(?i)(?:username|user|uname)[\s:=\"']+([a-zA-Z0-9._-]{3,})",
     "Password": r"(?i)(?:password|passwd|pwd)[\s:=\"']+([a-zA-Z0-9!@#$%^&*()_+=\-]{4,})",
 }
 COMPILED_PATTERNS = {k: re.compile(v) for k, v in SENSITIVE_PATTERNS.items()}
