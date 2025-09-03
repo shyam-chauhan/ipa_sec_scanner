@@ -32,6 +32,7 @@ SENSITIVE_PATTERNS = {
     "Stripe Live Secret Key": r"sk_live_[0-9a-zA-Z\/]{24,}",
     "Stripe Test Secret Key": r"sk_test_[0-9a-zA-Z\/]{24,}",
     "Stripe Publishable Key": r"pk_(?:test|live)_[0-9a-zA-Z\/]{24,}",
+    "OpenAI Key": r"sk-[0-9a-zA-Z]{48}",
     "Stripe Webhook Secret": r"whsec_[0-9a-zA-Z]{32,}",
     "PayPal Client ID": r"A[a-zA-Z0-9]{79,}",
     "PayPal Secret": r"(?i)(?:paypal.*secret)[\s:=\"']+[^\x00-\x1F\x7F<>]{32,}",
