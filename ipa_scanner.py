@@ -43,7 +43,10 @@ SENSITIVE_PATTERNS = {
     "Password": r"(?i)(?:password|passwd|pwd)[\s:=\"']+([a-zA-Z0-9!@#$%^&*()_+=\-]{4,})",
 }
 COMPILED_PATTERNS = {k: re.compile(v) for k, v in SENSITIVE_PATTERNS.items()}
-BASE64_REGEX = re.compile(r"\b[A-Za-z0-9+/]{20,}={0,2}\b")
+# uncomment this if you want base64 noise
+# BASE64_REGEX = re.compile(r"\b[A-Za-z0-9+/]{20,}={0,2}\b")
+# comment this afterwards to get base64, trust me you won't find anything
+BASE64_REGEX = re.compile(r"^(null)?$")  
 
 # Exclusions
 EXCLUDED_EXTENSIONS = ['.css', '.scss', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.woff', '.woff2', '.ttf', '.otf', '.eot']
